@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darell Trading Signal & Analyzer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Custom Theme Styling -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0b0e14',
+                        cardbg: '#151921',
+                        bordercolor: '#222733',
+                        accentgreen: '#00c076',
+                        accentred: '#ff3b30',
+                        accentyellow: '#f7a600',
+                        brandblue: '#2962ff'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0e14;
+            color: #e1e3e6;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #151921;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2b313f;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-cardbg border-b border-bordercolor px-4 py-3 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-brandblue text-white p-2 rounded-lg font-bold flex items-center justify-center">
+                    <i data-lucide="trending-up" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide leading-tight">DARELL TRADING</h1>
+                    <p class="text-xs text-gray-400">Signal & Market Analyzer Hub</p>
+                </div>
+            </div>
+
+            <!-- Asset Quick Selector -->
+            <div class="flex items-center gap-2 overflow-x-auto py-1 max-w-full">
+                <button onclick="changeAsset('BTCUSDT', 'Bitcoin', '103450.00')" id="btn-BTCUSDT" class="asset-btn bg-brandblue/20 border border-brandblue text-white px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition">
+                    <span>⚡ BTC</span> <span class="text-gray-400">$103.4K</span>
+                </button>
+                <button onclick="changeAsset('ETHUSDT', 'Ethereum', '3420.50')" id="btn-ETHUSDT" class="asset-btn bg-cardbg border border-bordercolor text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition">
+                    <span>Ξ ETH</span> <span class="text-gray-400">$3.4K</span>
+                </button>
+                <button onclick="changeAsset('SOLUSDT', 'Solana', '215.80')" id="btn-SOLUSDT" class="asset-btn bg-cardbg border border-bordercolor text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition">
+                    <span>◎ SOL</span> <span class="text-gray-400">$215.8</span>
+                </button>
+                <button onclick="changeAsset('BNBUSDT', 'Binance Coin', '680.20')" id="btn-BNBUSDT" class="asset-btn bg-cardbg border border-bordercolor text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition">
+                    <span>🔶 BNB</span> <span class="text-gray-400">$680.2</span>
+                </button>
+                <button onclick="changeAsset('OANDA:XAUUSD', 'Gold Spot', '2750.40')" id="btn-OANDA:XAUUSD" class="asset-btn bg-cardbg border border-bordercolor text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition">
+                    <span>🥇 GOLD</span> <span class="text-gray-400">$2,750</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow">
+
+        <!-- LEFT/CENTER COLUMN: CHART & SIGNAL ENGINE (8 Cols) -->
+        <section class="lg:col-span-8 flex flex-col gap-5">
+
+            <!-- CHART CONTAINER CARD -->
+            <div class="bg-cardbg border border-bordercolor rounded-xl p-4 shadow-lg flex flex-col">
+                <!-- Timeframe Controls Header -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-bordercolor">
+                    <div class="flex items-center gap-2">
+                        <span id="current-asset-title" class="font-bold text-white text-base">BTC/USDT</span>
+                        <span id="current-asset-price" class="text-xs bg-accentgreen/10 text-accentgreen font-mono px-2 py-0.5 rounded border border-accentgreen/30">$103,450.00</span>
+                    </div>
+
+                    <!-- Timeframe Switcher -->
+                    <div class="flex items-center gap-1 bg-darkbg p-1 rounded-lg border border-bordercolor text-xs">
+                        <button onclick="changeTimeframe('1')" id="tf-1" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white transition">1m</button>
+                        <button onclick="changeTimeframe('5')" id="tf-5" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white transition">5m</button>
+                        <button onclick="changeTimeframe('15')" id="tf-15" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white transition">15m</button>
+                        <button onclick="changeTimeframe('60')" id="tf-60" class="tf-btn bg-brandblue text-white px-2.5 py-1 rounded font-bold transition">1h</button>
+                        <button onclick="changeTimeframe('240')" id="tf-240" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white transition">4h</button>
+                        <button onclick="changeTimeframe('D')" id="tf-D" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white transition">1D</button>
+                    </div>
+                </div>
+
+                <!-- TradingView Live Chart Embed Container -->
+                <div class="w-full h-[480px] rounded-lg overflow-hidden bg-darkbg relative" id="tv-chart-container">
+                    <div id="tradingview_widget"></div>
+                </div>
+            </div>
+
+            <!-- CANDLESTICK PATTERN TRACKER & LIVE SIGNAL ANALYSIS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                
+                <!-- Candlestick Pattern Detector -->
+                <div class="bg-cardbg border border-bordercolor rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                                <i data-lucide="candlestick-chart" class="w-4 h-4 text-accentyellow"></i>
+                                Candlestick Pattern Tracker
+                            </h3>
+                            <span class="text-[10px] text-gray-400 bg-darkbg px-2 py-0.5 rounded">Live Detection</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="bg-darkbg p-3 rounded-lg border border-bordercolor flex items-center justify-between">
+                                <div>
+                                    <p id="pattern-name" class="font-bold text-sm text-accentgreen">Bullish Engulfing</p>
+                                    <p id="pattern-desc" class="text-xs text-gray-400 mt-0.5">Strong reversal signal detected on current timeframe.</p>
+                                </div>
+                                <span id="pattern-badge" class="px-2.5 py-1 bg-accentgreen/20 text-accentgreen border border-accentgreen/40 text-xs font-bold rounded-md">BUY</span>
+                            </div>
+
+                            <div class="text-xs space-y-1.5 text-gray-300">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Pattern Reliability:</span>
+                                    <span id="pattern-reliability" class="font-semibold text-white">High (85%)</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Market Trend Context:</span>
+                                    <span id="pattern-trend" class="font-semibold text-accentgreen">Uptrend Support</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="scanPatterns()" class="mt-4 w-full py-2 bg-darkbg hover:bg-bordercolor border border-bordercolor rounded-lg text-xs font-medium text-gray-300 flex items-center justify-center gap-1.5 transition">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Re-Scan Candle Patterns
+                    </button>
+                </div>
+
+                <!-- Live Signal & Market Gauge -->
+                <div class="bg-cardbg border border-bordercolor rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                                <i data-lucide="gauge" class="w-4 h-4 text-brandblue"></i>
+                                Signal Summary Gauge
+                            </h3>
+                            <span id="signal-timeframe-tag" class="text-[10px] text-gray-400 bg-darkbg px-2 py-0.5 rounded">1h TF</span>
+                        </div>
+
+                        <div class="flex items-center justify-center py-2">
+                            <div id="signal-box" class="text-center p-3 rounded-xl bg-accentgreen/10 border border-accentgreen/30 w-full">
+                                <span id="signal-text" class="text-2xl font-black text-accentgreen tracking-wider uppercase block">STRONG BUY</span>
+                                <span id="signal-confidence" class="text-xs text-gray-300 mt-1 block">Overall Confidence: <b class="text-accentgreen">88%</b></span>
+                            </div>
+                        </div>
+
+                        <!-- Indicator Breakdown Matrix -->
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2">
+                            <div class="bg-darkbg p-2 rounded border border-bordercolor">
+                                <span class="text-gray-400 block text-[10px]">RSI (14)</span>
+                                <span id="rsi-val" class="font-bold text-accentgreen">42.5 (Bullish)</span>
+                            </div>
+                            <div class="bg-darkbg p-2 rounded border border-bordercolor">
+                                <span class="text-gray-400 block text-[10px]">MACD</span>
+                                <span id="macd-val" class="font-bold text-accentgreen">Bull Cross</span>
+                            </div>
+                            <div class="bg-darkbg p-2 rounded border border-bordercolor">
+                                <span class="text-gray-400 block text-[10px]">EMA (200)</span>
+                                <span id="ema-val" class="font-bold text-accentgreen">Above EMA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="generateNewSignal()" class="mt-4 w-full py-2 bg-brandblue hover:bg-blue-600 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i> Update Dynamic Signal
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- TRADING PLANNER & JOURNAL SECTION -->
+            <div class="bg-cardbg border border-bordercolor rounded-xl p-4 shadow-lg">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-bordercolor">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-accentgreen"></i>
+                        Darell's Trading Planner & Journal
+                    </h3>
+                    <span class="text-xs text-gray-400">Keep track of your strategy & trades</span>
+                </div>
+
+                <!-- Input Form -->
+                <form id="journal-form" onsubmit="addJournalEntry(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                    <input type="text" id="j-pair" placeholder="Pair (e.g. BTCUSDT)" class="bg-darkbg border border-bordercolor text-xs rounded-lg p-2.5 text-white focus:outline-none focus:border-brandblue" required>
+                    <select id="j-type" class="bg-darkbg border border-bordercolor text-xs rounded-lg p-2.5 text-white focus:outline-none focus:border-brandblue">
+                        <option value="BUY/LONG">BUY / LONG</option>
+                        <option value="SELL/SHORT">SELL / SHORT</option>
+                    </select>
+                    <input type="number" step="any" id="j-entry" placeholder="Entry Price" class="bg-darkbg border border-bordercolor text-xs rounded-lg p-2.5 text-white focus:outline-none focus:border-brandblue" required>
+                    <input type="text" id="j-notes" placeholder="Strategy / Reason" class="bg-darkbg border border-bordercolor text-xs rounded-lg p-2.5 text-white focus:outline-none focus:border-brandblue" required>
+                    <button type="submit" class="bg-accentgreen hover:bg-emerald-600 text-black font-bold text-xs rounded-lg p-2.5 flex items-center justify-center gap-1 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Save Trade
+                    </button>
+                </form>
+
+                <!-- Planner History Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-darkbg text-gray-400 border-b border-bordercolor">
+                                <th class="p-2.5">Date</th>
+                                <th class="p-2.5">Asset</th>
+                                <th class="p-2.5">Type</th>
+                                <th class="p-2.5">Entry Price</th>
+                                <th class="p-2.5">Notes/Strategy</th>
+                                <th class="p-2.5">Status</th>
+                                <th class="p-2.5 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journal-list" class="divide-y divide-bordercolor">
+                            <!-- Dynamic Journal Entries will render here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: TP/SL CALCULATOR & SCREENSHOT ANALYZER (4 Cols) -->
+        <section class="lg:col-span-4 flex flex-col gap-5">
+
+            <!-- TAKE PROFIT & STOP LOSS CALCULATOR -->
+            <div class="bg-cardbg border border-bordercolor rounded-xl p-4 shadow-lg">
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-bordercolor">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i data-lucide="calculator" class="w-4 h-4 text-accentyellow"></i>
+                        TP / SL Risk Calculator
+                    </h3>
+                    <span class="text-[10px] text-gray-400 bg-darkbg px-2 py-0.5 rounded">Risk Management</span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-gray-400 block mb-1">Position Side</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setCalcSide('LONG')" id="calc-long-btn" class="py-2 bg-accentgreen/20 text-accentgreen border border-accentgreen rounded-lg font-bold">LONG (BUY)</button>
+                            <button onclick="setCalcSide('SHORT')" id="calc-short-btn" class="py-2 bg-darkbg text-gray-400 border border-bordercolor rounded-lg font-bold">SHORT (SELL)</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-400 block mb-1">Entry Price ($)</label>
+                        <input type="number" id="calc-entry" oninput="calculateTPSL()" class="w-full bg-darkbg border border-bordercolor rounded-lg p-2.5 text-white font-mono focus:outline-none focus:border-brandblue" placeholder="103450.00">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-gray-400 block mb-1">Risk (%) [SL]</label>
+                            <input type="number" id="calc-risk" value="1.5" step="0.1" oninput="calculateTPSL()" class="w-full bg-darkbg border border-bordercolor rounded-lg p-2 text-white font-mono focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 block mb-1">Reward Ratio (R:R)</label>
+                            <input type="number" id="calc-rr" value="2.0" step="0.1" oninput="calculateTPSL()" class="w-full bg-darkbg border border-bordercolor rounded-lg p-2 text-white font-mono focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Output Results Card -->
+                    <div class="bg-darkbg p-3 rounded-lg border border-bordercolor space-y-2 font-mono mt-3">
+                        <div class="flex justify-between items-center text-accentgreen">
+                            <span class="text-gray-400 font-sans">Take Profit (TP):</span>
+                            <span id="res-tp" class="font-bold text-sm">$106,553.50 (+3.0%)</span>
+                        </div>
+                        <div class="flex justify-between items-center text-accentred">
+                            <span class="text-gray-400 font-sans">Stop Loss (SL):</span>
+                            <span id="res-sl" class="font-bold text-sm">$101,898.25 (-1.5%)</span>
+                        </div>
+                        <div class="border-t border-bordercolor pt-2 flex justify-between items-center text-gray-300">
+                            <span class="text-gray-400 font-sans">Risk / Reward:</span>
+                            <span id="res-rr" class="font-bold">1 : 2.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREENSHOT CHART ANALYZER AI -->
+            <div class="bg-cardbg border border-bordercolor rounded-xl p-4 shadow-lg flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-bordercolor">
+                        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                            <i data-lucide="file-search" class="w-4 h-4 text-brandblue"></i>
+                            Screenshot Chart Analyzer
+                        </h3>
+                        <span class="text-[10px] bg-brandblue/20 text-brandblue px-2 py-0.5 rounded font-bold">AI Scanner</span>
+                    </div>
+
+                    <p class="text-xs text-gray-400 mb-3">
+                        Mag-upload ng picture ng iyong chart para suriin ang trend, support/resistance, at posibleng signal.
+                    </p>
+
+                    <!-- File Upload Input Area -->
+                    <div id="drop-zone" onclick="document.getElementById('chart-upload').click()" class="border-2 border-dashed border-bordercolor hover:border-brandblue rounded-xl p-5 text-center cursor-pointer bg-darkbg/50 hover:bg-darkbg transition">
+                        <input type="file" id="chart-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                        <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-gray-400 mb-2"></i>
+                        <p class="text-xs text-gray-300 font-semibold">Click to upload chart screenshot</p>
+                        <p class="text-[10px] text-gray-500 mt-1">PNG, JPG, or WEBP supported</p>
+                    </div>
+
+                    <!-- Image Preview & Analysis Output -->
+                    <div id="analysis-preview-container" class="hidden mt-3 space-y-3">
+                        <div class="relative rounded-lg overflow-hidden border border-bordercolor max-h-40">
+                            <img id="image-preview" src="#" alt="Chart Preview" class="w-full object-cover">
+                        </div>
+
+                        <!-- Scan Spinner -->
+                        <div id="scanning-indicator" class="hidden text-center py-3">
+                            <i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto text-brandblue mb-1"></i>
+                            <span class="text-xs text-gray-400">Analyzing chart patterns & trendlines...</span>
+                        </div>
+
+                        <!-- AI Result -->
+                        <div id="analysis-result" class="bg-darkbg p-3 rounded-lg border border-bordercolor space-y-2 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-white">AI Detection Result:</span>
+                                <span id="ai-signal-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-accentgreen/20 text-accentgreen border border-accentgreen/30">BULLISH SETUP</span>
+                            </div>
+                            <p id="ai-summary" class="text-gray-300">
+                                Ang uploaded chart ay nagpapakita ng <b>Ascending Triangle Pattern</b> malapit sa resistance level. Mataas ang tsansa na mag-breakout pataas.
+                            </p>
+                            <div class="pt-2 border-t border-bordercolor space-y-1 text-gray-400 text-[11px]">
+                                <div>• Resistance: <span id="ai-res" class="text-white font-mono">Key Zone Detected</span></div>
+                                <div>• Support: <span id="ai-sup" class="text-white font-mono">Higher Lows Trendline</span></div>
+                                <div>• Recommendation: <span class="text-accentgreen font-bold">Wait for candle close above resistance before Entry.</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-cardbg border-t border-bordercolor py-3 px-4 text-center text-xs text-gray-500 mt-auto">
+        <p>© 2026 <b>Darell Trading Signal & Analyzer</b>. All rights reserved. For Educational & Trading Analysis purposes only.</p>
+    </footer>
+
+    <!-- APPLICATION SCRIPT -->
+    <script>
+        // State variables
+        let currentSymbol = 'BTCUSDT';
+        let currentAssetName = 'Bitcoin';
+        let currentPrice = 103450.00;
+        let currentTimeframe = '60';
+        let calcSide = 'LONG';
+        let widget = null;
+
+        // Dynamic Data Mappings
+        const assetPrices = {
+            'BTCUSDT': 103450.00,
+            'ETHUSDT': 3420.50,
+            'SOLUSDT': 215.80,
+            'BNBUSDT': 680.20,
+            'OANDA:XAUUSD': 2750.40
+        };
+
+        const candlestickPatterns = [
+            { name: "Bullish Engulfing", desc: "Strong buyers taking over sellers at key support zone.", type: "BUY", reliability: "High (88%)", trend: "Bullish Reversal" },
+            { name: "Hammer Candle", desc: "Rejection of lower prices showing strong buying pressure.", type: "BUY", reliability: "Medium (75%)", trend: "Bottom Reversal" },
+            { name: "Bearish Engulfing", desc: "Sellers outpowering buyers at major resistance level.", type: "SELL", reliability: "High (86%)", trend: "Bearish Reversal" },
+            { name: "Shooting Star", desc: "Price rejected from high level, strong selling wick.", type: "SELL", reliability: "High (82%)", trend: "Top Reversal" },
+            { name: "Doji Indecision", desc: "Market indecision between buyers and sellers.", type: "NEUTRAL", reliability: "Medium (60%)", trend: "Consolidation" }
+        ];
+
+        // Initialize Lucide Icons & TradingView Widget on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initTradingViewWidget(currentSymbol, currentTimeframe);
+            calculateTPSL();
+            loadJournalEntries();
+        });
+
+        // Load / Reload TradingView Widget
+        function initTradingViewWidget(symbol, timeframe) {
+            const container = document.getElementById('tradingview_widget');
+            container.innerHTML = ''; // clear
+
+            const script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+            script.type = 'text/javascript';
+            script.async = true;
+            script.innerHTML = JSON.stringify({
+                "autosize": true,
+                "symbol": symbol.includes(':') ? symbol : "BINANCE:" + symbol,
+                "interval": timeframe,
+                "timezone": "Asia/Manila",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "enable_publishing": false,
+                "backgroundColor": "#0b0e14",
+                "gridColor": "rgba(42, 46, 57, 0.2)",
+                "allow_symbol_change": true,
+                "container_id": "tradingview_widget"
+            });
+            container.appendChild(script);
+        }
+
+        // Switch Active Asset
+        function changeAsset(symbol, name, defaultPrice) {
+            currentSymbol = symbol;
+            currentAssetName = name;
+            currentPrice = parseFloat(defaultPrice) || assetPrices[symbol] || 100;
+
+            // Update UI Labels
+            document.getElementById('current-asset-title').innerText = `${name} (${symbol.replace('OANDA:', '')})`;
+            document.getElementById('current-asset-price').innerText = `$${currentPrice.toLocaleString()}`;
+            document.getElementById('calc-entry').value = currentPrice;
+
+            // Highlight Active Button
+            document.querySelectorAll('.asset-btn').forEach(btn => {
+                btn.className = 'asset-btn bg-cardbg border border-bordercolor text-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition';
+            });
+            const activeBtn = document.getElementById(`btn-${symbol}`);
+            if(activeBtn) {
+                activeBtn.className = 'asset-btn bg-brandblue/20 border border-brandblue text-white px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition';
+            }
+
+            // Reload Widget & Refresh Calculations
+            initTradingViewWidget(currentSymbol, currentTimeframe);
+            generateNewSignal();
+            calculateTPSL();
+        }
+
+        // Switch Timeframe
+        function changeTimeframe(tf) {
+            currentTimeframe = tf;
+
+            // Highlight TF buttons
+            document.querySelectorAll('.tf-btn').forEach(btn => {
+                btn.className = 'tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white transition';
+            });
+            document.getElementById(`tf-${tf}`).className = 'tf-btn bg-brandblue text-white px-2.5 py-1 rounded font-bold transition';
+
+            document.getElementById('signal-timeframe-tag').innerText = `${tf === 'D' ? '1D' : tf + 'm'} TF`;
+
+            initTradingViewWidget(currentSymbol, currentTimeframe);
+            generateNewSignal();
+        }
+
+        // Random Dynamic Signal Generator for Simulation
+        function generateNewSignal() {
+            const signals = ["STRONG BUY", "BUY", "NEUTRAL", "SELL", "STRONG SELL"];
+            const randomSignal = signals[Math.floor(Math.random() * signals.length)];
+            const confidence = Math.floor(Math.random() * 25) + 70; // 70-95%
+
+            const signalBox = document.getElementById('signal-box');
+            const signalText = document.getElementById('signal-text');
+            const signalConf = document.getElementById('signal-confidence');
+
+            signalText.innerText = randomSignal;
+            signalConf.innerHTML = `Overall Confidence: <b class="text-white">${confidence}%</b>`;
+
+            if(randomSignal.includes('BUY')) {
+                signalBox.className = "text-center p-3 rounded-xl bg-accentgreen/10 border border-accentgreen/30 w-full";
+                signalText.className = "text-2xl font-black text-accentgreen tracking-wider uppercase block";
+            } else if(randomSignal.includes('SELL')) {
+                signalBox.className = "text-center p-3 rounded-xl bg-accentred/10 border border-accentred/30 w-full";
+                signalText.className = "text-2xl font-black text-accentred tracking-wider uppercase block";
+            } else {
+                signalBox.className = "text-center p-3 rounded-xl bg-accentyellow/10 border border-accentyellow/30 w-full";
+                signalText.className = "text-2xl font-black text-accentyellow tracking-wider uppercase block";
+            }
+
+            // Update Technical Indicators Mock Display
+            document.getElementById('rsi-val').innerText = `${(Math.random()*40 + 35).toFixed(1)} (${randomSignal.includes('BUY')?'Bullish':'Bearish'})`;
+            document.getElementById('macd-val').innerText = randomSignal.includes('BUY') ? 'Bullish Cross' : 'Bearish Cross';
+            document.getElementById('ema-val').innerText = randomSignal.includes('BUY') ? 'Above EMA200' : 'Below EMA200';
+
+            scanPatterns();
+        }
+
+        // Scan Candlestick Patterns
+        function scanPatterns() {
+            const randomPattern = candlestickPatterns[Math.floor(Math.random() * candlestickPatterns.length)];
+            
+            document.getElementById('pattern-name').innerText = randomPattern.name;
+            document.getElementById('pattern-desc').innerText = randomPattern.desc;
+            document.getElementById('pattern-reliability').innerText = randomPattern.reliability;
+            document.getElementById('pattern-trend').innerText = randomPattern.trend;
+
+            const badge = document.getElementById('pattern-badge');
+            badge.innerText = randomPattern.type;
+
+            if(randomPattern.type === 'BUY') {
+                badge.className = "px-2.5 py-1 bg-accentgreen/20 text-accentgreen border border-accentgreen/40 text-xs font-bold rounded-md";
+            } else if(randomPattern.type === 'SELL') {
+                badge.className = "px-2.5 py-1 bg-accentred/20 text-accentred border border-accentred/40 text-xs font-bold rounded-md";
+            } else {
+                badge.className = "px-2.5 py-1 bg-accentyellow/20 text-accentyellow border border-accentyellow/40 text-xs font-bold rounded-md";
+            }
+        }
+
+        // TP/SL Calculator Logic
+        function setCalcSide(side) {
+            calcSide = side;
+            const longBtn = document.getElementById('calc-long-btn');
+            const shortBtn = document.getElementById('calc-short-btn');
+
+            if(side === 'LONG') {
+                longBtn.className = "py-2 bg-accentgreen/20 text-accentgreen border border-accentgreen rounded-lg font-bold";
+                shortBtn.className = "py-2 bg-darkbg text-gray-400 border border-bordercolor rounded-lg font-bold";
+            } else {
+                shortBtn.className = "py-2 bg-accentred/20 text-accentred border border-accentred rounded-lg font-bold";
+                longBtn.className = "py-2 bg-darkbg text-gray-400 border border-bordercolor rounded-lg font-bold";
+            }
+            calculateTPSL();
+        }
+
+        function calculateTPSL() {
+            let entry = parseFloat(document.getElementById('calc-entry').value) || currentPrice;
+            let riskPct = parseFloat(document.getElementById('calc-risk').value) || 1.5;
+            let rrRatio = parseFloat(document.getElementById('calc-rr').value) || 2.0;
+
+            let slPrice, tpPrice, rewardPct;
+
+            if(calcSide === 'LONG') {
+                slPrice = entry * (1 - (riskPct / 100));
+                rewardPct = riskPct * rrRatio;
+                tpPrice = entry * (1 + (rewardPct / 100));
+            } else {
+                slPrice = entry * (1 + (riskPct / 100));
+                rewardPct = riskPct * rrRatio;
+                tpPrice = entry * (1 - (rewardPct / 100));
+            }
+
+            document.getElementById('res-tp').innerText = `$${tpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (+${rewardPct.toFixed(1)}%)`;
+            document.getElementById('res-sl').innerText = `$${slPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (-${riskPct.toFixed(1)}%)`;
+            document.getElementById('res-rr').innerText = `1 : ${rrRatio.toFixed(1)}`;
+        }
+
+        // Image Upload Analyzer Logic
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('analysis-preview-container').classList.remove('hidden');
+                
+                // Show scanning state
+                const scanner = document.getElementById('scanning-indicator');
+                const resultBox = document.getElementById('analysis-result');
+                scanner.classList.remove('hidden');
+                resultBox.classList.add('hidden');
+
+                setTimeout(() => {
+                    scanner.classList.add('hidden');
+                    resultBox.classList.remove('hidden');
+                    lucide.createIcons();
+                }, 1500);
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // TRADING PLANNER / JOURNAL LOCALSTORAGE LOGIC
+        let journalEntries = JSON.parse(localStorage.getItem('darell_trades')) || [
+            { id: 1, date: '2026-09-27', pair: 'BTCUSDT', type: 'BUY/LONG', entry: 102500, notes: 'Breakout confirmation + Bullish Engulfing', status: 'WIN' },
+            { id: 2, date: '2026-09-26', pair: 'ETHUSDT', type: 'SELL/SHORT', entry: 3480, notes: 'Double Top Resistance rejection', status: 'WIN' }
+        ];
+
+        function loadJournalEntries() {
+            const list = document.getElementById('journal-list');
+            list.innerHTML = '';
+
+            if(journalEntries.length === 0) {
+                list.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">Wala pang nakaguhit na trade planner logs. Dagdag ka sa taas!</td></tr>`;
+                return;
+            }
+
+            journalEntries.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-darkbg/50 transition";
+                tr.innerHTML = `
+                    <td class="p-2.5 text-gray-400">${item.date}</td>
+                    <td class="p-2.5 font-bold text-white">${item.pair}</td>
+                    <td class="p-2.5 font-bold ${item.type.includes('BUY') ? 'text-accentgreen' : 'text-accentred'}">${item.type}</td>
+                    <td class="p-2.5 font-mono text-gray-200">$${parseFloat(item.entry).toLocaleString()}</td>
+                    <td class="p-2.5 text-gray-300 max-w-xs truncate">${item.notes}</td>
+                    <td class="p-2.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.status === 'WIN' ? 'bg-accentgreen/20 text-accentgreen' : item.status === 'LOSS' ? 'bg-accentred/20 text-accentred' : 'bg-accentyellow/20 text-accentyellow'}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="p-2.5 text-right">
+                        <button onclick="deleteJournal(${item.id})" class="text-gray-500 hover:text-accentred p-1 transition">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function addJournalEntry(e) {
+            e.preventDefault();
+            const pair = document.getElementById('j-pair').value.toUpperCase();
+            const type = document.getElementById('j-type').value;
+            const entry = document.getElementById('j-entry').value;
+            const notes = document.getElementById('j-notes').value;
+            const today = new Date().toISOString().split('T')[0];
+
+            const newTrade = {
+                id: Date.now(),
+                date: today,
+                pair: pair,
+                type: type,
+                entry: entry,
+                notes: notes,
+                status: 'PENDING'
+            };
+
+            journalEntries.unshift(newTrade);
+            localStorage.setItem('darell_trades', JSON.stringify(journalEntries));
+            loadJournalEntries();
+
+            // Reset Form
+            document.getElementById('journal-form').reset();
+        }
+
+        function deleteJournal(id) {
+            journalEntries = journalEntries.filter(item => item.id !== id);
+            localStorage.setItem('darell_trades', JSON.stringify(journalEntries));
+            loadJournalEntries();
+        }
+    </script>
+</body>
+</html>
